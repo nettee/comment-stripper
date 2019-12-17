@@ -11,6 +11,10 @@ class FileReader:
         c = self.f.read(1)
         return c
 
+    def _shift(self):
+        self.next = self.next2
+        self.next2 = self._read1()
+
     def eof(self):
         return self.next == '' and self.next2 == ''
 
@@ -20,18 +24,18 @@ class FileReader:
     def get2(self):
         return self.next2
 
-    def consume(self):
-        self.next = self.next2
-        self.next2 = self._read1()
-
     def print(self):
         print(self.next, end='')
-        self.consume()
+        self._shift()
+
+    def print2(self):
+        self.print()
+        self.print()
 
     def ignore(self):
         replaced = '\n' if self.next == '\n' else ' '
         print(replaced, end='')
-        self.consume()
+        self._shift()
 
     def ignore2(self):
         self.ignore()
@@ -49,14 +53,18 @@ def strip_comment(source):
         c = source.get()
 
         if state == State.IN_LINE_COMMENT:
-            if c == '\n':
+            if c == '\\':
+                source.ignore2()
+            elif c == '\n':
                 state = State.NORMAL
                 source.ignore()
             else:
                 source.ignore()
 
         elif state == State.IN_MULTI_LINE_COMMENT:
-            if c == '*':
+            if c == '\\':
+                source.ignore2()
+            elif c == '*':
                 c2 = source.get2()
                 if c2 == '/':
                     state = State.NORMAL
@@ -66,8 +74,19 @@ def strip_comment(source):
             else:
                 source.ignore()
 
+        elif state == State.IN_STRING:
+            if c == '\\':
+                source.print2()
+            elif c == '"':
+                state = State.NORMAL
+                source.print()
+            else:
+                source.print()
+
         elif state == State.NORMAL:
-            if c == '/':
+            if c == '\\':
+                source.print2()
+            elif c == '/':
                 c2 = source.get2()
                 if c2 == '/':
                     state = State.IN_LINE_COMMENT
@@ -77,6 +96,9 @@ def strip_comment(source):
                     source.ignore2()
                 else:
                     source.print()
+            elif c == '"':
+                state = State.IN_STRING
+                source.print()
             else:
                 source.print()
 
