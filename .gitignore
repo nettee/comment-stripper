@@ -1,5 +1,8 @@
 # PyCharm files
 /.idea/
 
+# VSCode files
+/.vscode/
+
 # Python virtualenv
 /venv/

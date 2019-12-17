@@ -1,4 +1,4 @@
 .PHONY: run
 
 run:
-	python main.py testcase/a.cpp
+	python main.py testcase/a.cpp > testcase/a.stripped.cpp
